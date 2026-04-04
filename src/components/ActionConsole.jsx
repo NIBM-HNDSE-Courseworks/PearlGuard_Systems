@@ -1,0 +1,68 @@
+import React, { useEffect } from 'react';
+import { useSimulation } from '../store/useSimulation';
+import { Play, AlertTriangle, ShieldAlert, Crosshair } from 'lucide-react';
+
+export default function ActionConsole() {
+  const { scenario, setScenario, dronesDeployed, deployDrones, tick } = useSimulation();
+
+  // Engine loop
+  useEffect(() => {
+    const interval = setInterval(() => {
+      tick();
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [tick]);
+
+  return (
+    <div className="glass-panel widget widget-fixed">
+      <div className="widget-header">
+        <Play size={18} />
+        Simulation Center
+      </div>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>SCENARIO OVERRIDES</div>
+        
+        <button 
+          className={`glass-button ${scenario === 'NORMAL' ? 'active' : ''}`}
+          onClick={() => setScenario('NORMAL')}
+        >
+          Normal Patrol (Clear)
+        </button>
+        
+        <button 
+          className={`glass-button ${scenario === 'MINOR_LEAK' ? 'active' : ''}`}
+          onClick={() => setScenario('MINOR_LEAK')}
+          style={{ borderColor: scenario === 'MINOR_LEAK' ? 'var(--status-warn)' : undefined, color: scenario === 'MINOR_LEAK' ? 'var(--status-warn)' : undefined }}
+        >
+          <AlertTriangle size={16} /> Minor Leak
+        </button>
+        
+        <button 
+          className={`glass-button ${scenario === 'CATASTROPHIC' ? 'active danger emergency-glow' : ''}`}
+          onClick={() => setScenario('CATASTROPHIC')}
+          style={{ borderColor: scenario === 'CATASTROPHIC' ? 'var(--status-danger)' : undefined, color: scenario === 'CATASTROPHIC' ? 'white' : 'var(--status-danger)' }}
+        >
+          <ShieldAlert size={16} /> Catastrophic Event
+        </button>
+
+        <div style={{ height: '1px', background: 'var(--border-glass)', margin: '8px 0' }}></div>
+
+        <button 
+          className="glass-button"
+          onClick={deployDrones}
+          disabled={dronesDeployed}
+          style={{ 
+            background: dronesDeployed ? 'var(--bg-glass)' : 'var(--brand-cyan)', 
+            color: dronesDeployed ? 'var(--text-muted)' : 'black',
+            justifyContent: 'center',
+            opacity: dronesDeployed ? 0.5 : 1
+          }}
+        >
+          <Crosshair size={16} />
+          {dronesDeployed ? 'DRONES ACTIVE' : 'DEPLOY CLEANUP DRONES'}
+        </button>
+      </div>
+    </div>
+  );
+}
