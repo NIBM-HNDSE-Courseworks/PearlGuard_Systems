@@ -107,7 +107,7 @@ export default function MapComponent() {
         )}
 
         {/* Drones */}
-        {dronesDeployed && dronePositions.map((drone) => (
+        {dronePositions.map((drone) => (
           <Marker key={drone.id} position={[drone.lat, drone.lng]} icon={droneIcon} />
         ))}
       </MapContainer>

@@ -37,16 +37,20 @@ export const useSimulation = create((set, get) => ({
     probability: 0
   },
 
-  // Active Drones
+  // Active Drones (Home base near Colombo coast: 6.93, 79.84)
   dronePositions: [
-    { id: 'd1', lat: 7.02, lng: 79.80 },
-    { id: 'd2', lat: 6.98, lng: 79.83 },
-    { id: 'd3', lat: 6.90, lng: 79.79 }
+    { id: 'd1', name: 'Drone 1', lat: 6.93, lng: 79.84, baseLat: 6.93, baseLng: 79.84, battery: 100, status: 'IDLE', targetBuoy: null },
+    { id: 'd2', name: 'Drone 2', lat: 6.93, lng: 79.84, baseLat: 6.93, baseLng: 79.84, battery: 100, status: 'IDLE', targetBuoy: null },
+    { id: 'd3', name: 'Drone 3', lat: 6.93, lng: 79.84, baseLat: 6.93, baseLng: 79.84, battery: 100, status: 'IDLE', targetBuoy: null }
   ],
 
   // Actions
   setScenario: (newScenario) => {
-    set({ scenario: newScenario, dronesDeployed: false });
+    set((state) => ({ 
+      scenario: newScenario, 
+      dronesDeployed: false,
+      dronePositions: state.dronePositions.map(d => ({ ...d, lat: d.baseLat, lng: d.baseLng, battery: 100, status: 'IDLE', targetBuoy: null }))
+    }));
     get().addLog(`SCENARIO_UPDATED`, `Simulation shifted to ${newScenario} protocol.`);
   },
 
@@ -82,14 +86,6 @@ export const useSimulation = create((set, get) => ({
     let newDronePositions = [...dronePositions];
     let shouldLogCritical = false;
 
-    // Simulate drone patrols if deployed
-    if (dronesDeployed) {
-      const t = state.timeElapsed * 0.15; // Speed multiplier
-      newDronePositions[0] = { ...newDronePositions[0], lat: 7.02 + Math.sin(t)*0.015, lng: 79.80 + Math.cos(t)*0.015 };
-      newDronePositions[1] = { ...newDronePositions[1], lat: 6.98 + Math.sin(t+2)*0.02, lng: 79.83 + Math.cos(t+2)*0.02 };
-      newDronePositions[2] = { ...newDronePositions[2], lat: 6.90 + Math.sin(t+4)*0.025, lng: 79.79 + Math.cos(t+4)*0.025 };
-    }
-
     if (scenario === 'NORMAL') {
       newAIPredictions.threatLevel = 'LOW';
       newAIPredictions.spreadRadius = 0;
@@ -115,23 +111,75 @@ export const useSimulation = create((set, get) => ({
     }
 
     if (scenario === 'CATASTROPHIC') {
-      const reductionFactor = dronesDeployed ? -5 : 5; 
+      // Natural ambient increase if not contained
+      const spreadFactor = dronesDeployed ? -100 : 400; 
       
       newAIPredictions.threatLevel = dronesDeployed ? 'CONTAINING' : 'CRITICAL';
-      newAIPredictions.spreadRadius = Math.max(0, Math.min(8000, aiPredictions.spreadRadius + (dronesDeployed ? -200 : 400)));
+      newAIPredictions.spreadRadius = Math.max(0, Math.min(8000, aiPredictions.spreadRadius + spreadFactor));
       newAIPredictions.probability = dronesDeployed ? Math.max(10, aiPredictions.probability - 2) : Math.min(99, aiPredictions.probability + 5);
 
-      Object.keys(newSensors).forEach((key, idx) => {
+      Object.keys(newSensors).forEach((key) => {
         const target = newSensors[key];
-        // Center of spill is near buoy_1 and buoy_2
+        // Ambient spill effect near buoy_1 and buoy_2
         if (key === 'buoy_1' || key === 'buoy_2') {
-          target.toxicityPpm = Math.max(0, target.toxicityPpm + reductionFactor);
-          target.pH = Math.max(4.0, target.pH - (reductionFactor > 0 ? 0.2 : -0.1));
+          target.toxicityPpm += 3; // steady leak
+          target.pH = Math.max(4.0, target.pH - 0.1);
           target.status = target.toxicityPpm > 80 ? 'DANGER' : (target.toxicityPpm > 30 ? 'WARN' : 'SAFE');
           if (target.toxicityPpm >= 100 && state.timeElapsed % 5 === 0 && !dronesDeployed) {
             shouldLogCritical = true;
           }
         }
+      });
+    }
+
+    // Swarm Logic: Simulate drone actions if deployed (runs after ambient spill effects to clean them up)
+    if (dronesDeployed) {
+      const toxicBuoys = Object.values(newSensors)
+        .filter(b => b.toxicityPpm > 2 || b.status !== 'SAFE')
+        .sort((a, b) => b.toxicityPpm - a.toxicityPpm);
+
+      newDronePositions = newDronePositions.map((drone, idx) => {
+        let updatedDrone = { ...drone };
+        
+        // Auto-assign task based on priority
+        const target = toxicBuoys[idx] || toxicBuoys[0] || Object.values(newSensors)[idx % 4];
+        if (target) {
+          updatedDrone.targetBuoy = target.id;
+          const currentTargetCoords = Object.values(newSensors).find(b => b.id === updatedDrone.targetBuoy);
+          
+          if (currentTargetCoords) {
+            const dx = currentTargetCoords.lng - updatedDrone.lng;
+            const dy = currentTargetCoords.lat - updatedDrone.lat;
+            const distance = Math.sqrt(dx*dx + dy*dy);
+
+            if (distance > 0.003) {
+              // En route to target
+              const speed = 0.003; 
+              updatedDrone.lng += (dx / distance) * speed;
+              updatedDrone.lat += (dy / distance) * speed;
+              updatedDrone.status = 'EN ROUTE';
+            } else {
+              // Reached target, clean it
+              updatedDrone.status = 'CLEANING';
+              const sensorKey = Object.keys(newSensors).find(k => newSensors[k].id === target.id);
+              if (sensorKey) {
+                newSensors[sensorKey].toxicityPpm = Math.max(0, newSensors[sensorKey].toxicityPpm - 8); // Active suction/neutralizing
+                newSensors[sensorKey].pH = Math.min(8.1, newSensors[sensorKey].pH + 0.2);
+                newSensors[sensorKey].status = newSensors[sensorKey].toxicityPpm > 30 ? 'WARN' : 'SAFE';
+              }
+            }
+          }
+        }
+        
+        if (updatedDrone.status === 'CLEANING') {
+          updatedDrone.battery = Math.max(0, updatedDrone.battery - 0.3); // High drain
+        } else if (updatedDrone.status === 'EN ROUTE') {
+          updatedDrone.battery = Math.max(0, updatedDrone.battery - 0.1); // Moving drain
+        } else {
+          updatedDrone.battery = Math.max(0, updatedDrone.battery - 0.02); // Standby drain
+        }
+
+        return updatedDrone;
       });
     }
 

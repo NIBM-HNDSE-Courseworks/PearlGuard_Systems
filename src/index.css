@@ -236,6 +236,8 @@ body {
   flex-direction: column;
   gap: 16px;
   height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .widget {
@@ -280,6 +282,11 @@ body {
   height: 100%;
   width: 100%;
   background: #020617; /* Darker than base */
+}
+
+/* Smooth marker translation for ticking simulation */
+.leaflet-marker-icon {
+  transition: transform 1s linear !important;
 }
 
 /* Custom dark theme for leaflet map using CSS filters */

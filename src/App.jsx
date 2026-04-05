@@ -7,6 +7,7 @@ import IoTFeed from './components/IoTFeed';
 import AIWidget from './components/AIWidget';
 import BlockchainLog from './components/BlockchainLog';
 import ActionConsole from './components/ActionConsole';
+import DroneFleet from './components/DroneFleet';
 
 import { Anchor } from 'lucide-react';
 
@@ -18,7 +19,7 @@ function App() {
           <Anchor size={28} color="var(--brand-cyan)" />
           PearlGuard Command Center
         </div>
-        
+
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Role: <span style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>Port Authority Admin</span></div>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--status-safe)', boxShadow: '0 0 10px var(--status-safe)' }}></div>
@@ -40,6 +41,7 @@ function App() {
         {/* Right Panel */}
         <section className="side-panel">
           <ActionConsole />
+          <DroneFleet />
           <BlockchainLog />
         </section>
       </main>
