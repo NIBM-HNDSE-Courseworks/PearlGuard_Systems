@@ -7,19 +7,19 @@
   --border-glass: rgba(255, 255, 255, 0.1);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  
+
   --brand-cyan: #06b6d4;
   --brand-blue: #3b82f6;
-  
+
   --status-safe: #10b981;
   --status-safe-glow: rgba(16, 185, 129, 0.3);
-  
+
   --status-warn: #f59e0b;
   --status-warn-glow: rgba(245, 158, 11, 0.3);
-  
+
   --status-danger: #ef4444;
   --status-danger-glow: rgba(239, 68, 68, 0.4);
-  
+
   --panel-radius: 16px;
 }
 
@@ -32,7 +32,7 @@
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-base);
-  background-image: 
+  background-image:
     radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.08), transparent 25%),
     radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.08), transparent 25%);
   color: var(--text-main);
@@ -93,30 +93,63 @@ body {
   font-family: 'JetBrains Mono', monospace;
 }
 
-.text-danger { color: var(--status-danger); }
-.text-warn { color: var(--status-warn); }
-.text-safe { color: var(--status-safe); }
+.text-danger {
+  color: var(--status-danger);
+}
+
+.text-warn {
+  color: var(--status-warn);
+}
+
+.text-safe {
+  color: var(--status-safe);
+}
 
 /* Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
+
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2); 
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--border-glass); 
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted); 
+  background: var(--brand-cyan);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Global Scrollbar Fix (Firefox) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.3);
 }
 
 /* Animations */
 @keyframes pulseDanger {
-  0% { box-shadow: 0 0 0 0 var(--status-danger-glow); border-color: var(--status-danger); }
-  70% { box-shadow: 0 0 0 10px transparent; border-color: var(--status-danger); }
-  100% { box-shadow: 0 0 0 0 transparent; border-color: var(--border-glass); }
+  0% {
+    box-shadow: 0 0 0 0 var(--status-danger-glow);
+    border-color: var(--status-danger);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px transparent;
+    border-color: var(--status-danger);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    border-color: var(--border-glass);
+  }
 }
 
 .emergency-glow {
@@ -124,13 +157,25 @@ body {
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(100vh);
+  }
 }
 
 .log-entry {
@@ -143,6 +188,7 @@ body {
   width: 100%;
   height: 100%;
 }
+
 .drone-core {
   position: absolute;
   top: 50%;
@@ -157,6 +203,7 @@ body {
   z-index: 2;
   box-shadow: 0 0 10px var(--brand-cyan), 0 0 20px var(--brand-cyan);
 }
+
 .drone-radar {
   position: absolute;
   top: 50%;
@@ -169,6 +216,7 @@ body {
   border: 2px dashed rgba(6, 182, 212, 0.6);
   animation: radarSpin 4s linear infinite;
 }
+
 .drone-pulse {
   position: absolute;
   top: 50%;
@@ -183,12 +231,21 @@ body {
 }
 
 @keyframes radarSpin {
-  100% { transform: rotate(360deg); }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes dronePulseAnim {
-  0% { transform: scale(1); opacity: 0.8; }
-  100% { transform: scale(4); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
 }
 
 /* Layout */
@@ -281,7 +338,8 @@ body {
 .leaflet-container {
   height: 100%;
   width: 100%;
-  background: #020617; /* Darker than base */
+  background: #020617;
+  /* Darker than base */
 }
 
 /* Smooth marker translation for ticking simulation */
@@ -301,4 +359,60 @@ body {
   flex-direction: column;
   gap: 8px;
   padding-right: 4px;
+}
+
+/* Login Screen */
+.login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(6, 182, 212, 0.15), var(--bg-base) 70%);
+  z-index: 9999;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px;
+  animation: slideDown 0.5s ease-out;
+}
+
+.glass-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  padding: 12px 12px 12px 40px;
+  border-radius: 8px;
+  color: var(--text-main);
+  font-family: 'Outfit', sans-serif;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.glass-input:focus {
+  border-color: var(--brand-cyan);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+}
+
+/* Global Scrollbar Fix */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-glass) transparent;
+}
+
+/* Ensure side panels and widgets handle overflow properly */
+.side-panel {
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
+.widget {
+  min-height: 200px;
+  /* Ensure widgets have some space */
 }

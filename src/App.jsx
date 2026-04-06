@@ -11,7 +11,15 @@ import DroneFleet from './components/DroneFleet';
 
 import { Anchor } from 'lucide-react';
 
+import Login from './components/Login';
+
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+
+  if (!isAuthenticated) {
+    return <Login onLogin={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <>
       <header className="glass-panel app-header" style={{ marginBottom: '16px' }}>
