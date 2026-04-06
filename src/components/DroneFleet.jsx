@@ -27,41 +27,35 @@ export default function DroneFleet() {
         Swarm Controller
       </div>
 
-      {!dronesDeployed ? (
-        <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-          Drones are currently on standby at the coastal base.
-        </div>
-      ) : (
-        <div className="content-scrollable" style={{ gap: '12px' }}>
-          {dronePositions.map((drone) => (
-            <div key={drone.id} style={{
-              background: 'rgba(0, 0, 0, 0.2)',
-              borderRadius: '8px',
-              padding: '12px',
-              borderLeft: `3px solid ${getStatusColor(drone.status)}`,
-              flexShrink: 0
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <strong style={{ fontSize: '14px', color: 'var(--text-main)' }}>{drone.name}</strong>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-                  {getBatteryIcon(drone.battery)}
-                  {Math.round(drone.battery)}%
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                {drone.status === 'CLEANING' ? <Activity size={14} color="var(--status-warn)" /> : <Navigation size={14} />}
-                <span style={{ color: getStatusColor(drone.status) }}>{drone.status}</span>
-                {drone.targetBuoy && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}>
-                    <Crosshair size={12} /> {drone.targetBuoy}
-                  </span>
-                )}
+      <div className="content-scrollable" style={{ gap: '12px' }}>
+        {dronePositions.map((drone) => (
+          <div key={drone.id} style={{
+            background: 'rgba(0, 0, 0, 0.2)',
+            borderRadius: '8px',
+            padding: '12px',
+            borderLeft: `3px solid ${getStatusColor(drone.status)}`,
+            flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <strong style={{ fontSize: '14px', color: 'var(--text-main)' }}>{drone.name}</strong>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+                {getBatteryIcon(drone.battery)}
+                {Math.round(drone.battery)}%
               </div>
             </div>
-          ))}
-        </div>
-      )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
+              {drone.status === 'CLEANING' ? <Activity size={14} color="var(--status-warn)" /> : <Navigation size={14} />}
+              <span style={{ color: getStatusColor(drone.status) }}>{drone.status}</span>
+              {drone.targetBuoy && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}>
+                  <Crosshair size={12} /> {drone.targetBuoy}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

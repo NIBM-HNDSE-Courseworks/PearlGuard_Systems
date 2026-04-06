@@ -33,7 +33,13 @@ export default function ActionConsole() {
         <button 
           className={`glass-button ${scenario === 'MINOR_LEAK' ? 'active' : ''}`}
           onClick={() => setScenario('MINOR_LEAK')}
-          style={{ borderColor: scenario === 'MINOR_LEAK' ? 'var(--status-warn)' : undefined, color: scenario === 'MINOR_LEAK' ? 'var(--status-warn)' : undefined }}
+          disabled={scenario === 'CATASTROPHIC'}
+          style={{ 
+            borderColor: scenario === 'MINOR_LEAK' ? 'var(--status-warn)' : undefined, 
+            color: scenario === 'MINOR_LEAK' ? 'var(--status-warn)' : undefined,
+            opacity: scenario === 'CATASTROPHIC' ? 0.4 : 1,
+            cursor: scenario === 'CATASTROPHIC' ? 'not-allowed' : 'pointer'
+          }}
         >
           <AlertTriangle size={16} /> Minor Leak
         </button>
@@ -41,7 +47,13 @@ export default function ActionConsole() {
         <button 
           className={`glass-button ${scenario === 'CATASTROPHIC' ? 'active danger emergency-glow' : ''}`}
           onClick={() => setScenario('CATASTROPHIC')}
-          style={{ borderColor: scenario === 'CATASTROPHIC' ? 'var(--status-danger)' : undefined, color: scenario === 'CATASTROPHIC' ? 'white' : 'var(--status-danger)' }}
+          disabled={scenario === 'MINOR_LEAK'}
+          style={{ 
+            borderColor: scenario === 'CATASTROPHIC' ? 'var(--status-danger)' : undefined, 
+            color: scenario === 'CATASTROPHIC' ? 'white' : 'var(--status-danger)',
+            opacity: scenario === 'MINOR_LEAK' ? 0.4 : 1,
+            cursor: scenario === 'MINOR_LEAK' ? 'not-allowed' : 'pointer'
+          }}
         >
           <ShieldAlert size={16} /> Catastrophic Event
         </button>

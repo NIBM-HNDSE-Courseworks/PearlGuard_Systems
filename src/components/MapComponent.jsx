@@ -27,6 +27,25 @@ const droneIcon = L.divIcon({
   iconAnchor: [15, 15]
 });
 
+const createOriginIcon = (threatLevel) => {
+  const isActive = threatLevel === 'CRITICAL' || threatLevel === 'MEDIUM';
+  const isContaining = threatLevel === 'CONTAINING';
+  const color = isActive ? '#ef4444' : (isContaining ? '#06b6d4' : '#64748b');
+  const glowClass = isActive ? 'emergency-glow' : '';
+  
+  return L.divIcon({
+    className: 'custom-origin-icon',
+    html: `
+      <div class="${glowClass}" style="background-color: #020617; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid ${color}; cursor: pointer;">
+        <span style="font-size: 18px;">☣️</span>
+      </div>
+    `,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
+  });
+};
+
+
 const getPolygonCoords = (center, radiusKm, windDirection, stretchFactor = 1) => {
   if (radiusKm === 0) return [];
   // Very simplified polygon generator shifting coordinate based on wind
@@ -77,6 +96,25 @@ export default function MapComponent() {
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
         
+        {/* Origin Marker */}
+        {aiPredictions.threatLevel !== 'LOW' && (
+          <Marker 
+            position={aiPredictions.spreadCenter} 
+            icon={createOriginIcon(aiPredictions.threatLevel)}
+          >
+            <Popup className="glass-panel">
+              <div style={{ color: 'black', fontWeight: 'bold' }}>
+                <p style={{ fontSize: '16px', marginBottom: '4px', borderBottom: '1px solid #ccc', paddingBottom: '4px' }}>
+                  <span role="img" aria-label="biohazard">☣️</span> Hazard Origin
+                </p>
+                <p>Threat Level: <span style={{ color: aiPredictions.threatLevel === 'CRITICAL' ? 'red' : (aiPredictions.threatLevel === 'CONTAINING' ? 'blue' : 'gray') }}>{aiPredictions.threatLevel}</span></p>
+                <p>Source Radius: {(aiPredictions.spreadRadius / 1000).toFixed(2)} km</p>
+                <p>Coordinates: {aiPredictions.spreadCenter[0]}, {aiPredictions.spreadCenter[1]}</p>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
         {/* Render Sensors */}
         {Object.values(sensors).map(sensor => (
           <Marker 
