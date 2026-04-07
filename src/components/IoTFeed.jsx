@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSimulation } from '../store/useSimulation';
 import { Activity, Droplets } from 'lucide-react';
+import HistoricalDataModal from './HistoricalDataModal';
 
 export default function IoTFeed() {
   const sensors = useSimulation(state => state.sensors);
   const timeElapsed = useSimulation(state => state.timeElapsed);
+  const [selectedSensorId, setSelectedSensorId] = useState(null);
 
   return (
     <div className="glass-panel widget">
@@ -15,15 +17,22 @@ export default function IoTFeed() {
       
       <div className="content-scrollable">
         {Object.values(sensors).map(sensor => (
-          <div key={sensor.id} style={{
+          <div key={sensor.id} 
+            onClick={() => setSelectedSensorId(sensor.id)}
+            style={{
             background: 'var(--bg-glass-bright)',
             padding: '12px',
             borderRadius: '8px',
             borderLeft: `4px solid ${sensor.status === 'SAFE' ? 'var(--status-safe)' : (sensor.status === 'WARN' ? 'var(--status-warn)' : 'var(--status-danger)')}`,
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px'
-          }}>
+            gap: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 'bold' }}>{sensor.id}</span>
               <span className={`font-mono ${sensor.status === 'SAFE' ? 'text-safe' : (sensor.status === 'WARN' ? 'text-warn' : 'text-danger')}`} style={{ fontSize: '12px', fontWeight: 'bold' }}>
@@ -50,6 +59,13 @@ export default function IoTFeed() {
       <div style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', marginTop: 'auto' }}>
         Live Feed Active • Tick: {timeElapsed}
       </div>
+
+      {selectedSensorId && (
+        <HistoricalDataModal 
+          sensorId={selectedSensorId} 
+          onClose={() => setSelectedSensorId(null)} 
+        />
+      )}
     </div>
   );
 }

@@ -44,6 +44,8 @@ export const useSimulation = create((set, get) => ({
     { id: 'd3', name: 'Drone 3', lat: 6.93, lng: 79.84, baseLat: 6.93, baseLng: 79.84, battery: 100, status: 'IDLE', targetBuoy: null }
   ],
 
+  sensorHistory: {},
+
   // Actions
   setScenario: (newScenario) => {
     set((state) => ({
@@ -78,7 +80,7 @@ export const useSimulation = create((set, get) => ({
 
   // Game Engine Tick
   tick: () => set((state) => {
-    const { scenario, dronesDeployed, sensors, aiPredictions, dronePositions } = state;
+    const { scenario, dronesDeployed, sensors, aiPredictions, dronePositions, sensorHistory } = state;
 
     // Simulate Data Progression based on Scenario
     let newSensors = { ...sensors };
@@ -246,13 +248,29 @@ export const useSimulation = create((set, get) => ({
       }
     }
 
+    let newSensorHistory = { ...sensorHistory };
+    const currentTime = new Date().toLocaleTimeString();
+    Object.keys(newSensors).forEach(key => {
+      const historyArray = newSensorHistory[key] ? [...newSensorHistory[key]] : [];
+      historyArray.push({
+        time: currentTime,
+        pH: newSensors[key].pH,
+        toxicityPpm: newSensors[key].toxicityPpm
+      });
+      if (historyArray.length > 60) {
+        historyArray.shift();
+      }
+      newSensorHistory[key] = historyArray;
+    });
+
     return {
       timeElapsed: state.timeElapsed + 1,
       sensors: newSensors,
       aiPredictions: newAIPredictions,
       dronePositions: newDronePositions,
       dronesDeployed: finalDronesDeployed,
-      scenario: finalScenario
+      scenario: finalScenario,
+      sensorHistory: newSensorHistory
     };
   })
 }));
