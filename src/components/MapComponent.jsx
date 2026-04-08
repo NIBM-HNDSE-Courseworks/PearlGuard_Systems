@@ -14,18 +14,20 @@ const createBuoyIcon = (status) => {
   });
 };
 
-const droneIcon = L.divIcon({
-  className: 'custom-drone-icon',
-  html: `
-    <div class="drone-marker">
-      <div class="drone-pulse"></div>
-      <div class="drone-radar"></div>
-      <div class="drone-core"></div>
-    </div>
-  `,
-  iconSize: [30, 30],
-  iconAnchor: [15, 15]
-});
+const createDroneIcon = (status) => {
+  return L.divIcon({
+    className: `custom-drone-icon ${status === 'CLEANING' ? 'drone-docked' : ''}`,
+    html: `
+      <div class="drone-marker">
+        <div class="drone-pulse"></div>
+        <div class="drone-radar"></div>
+        <div class="drone-core"></div>
+      </div>
+    `,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+};
 
 const createOriginIcon = (threatLevel) => {
   const isActive = threatLevel === 'CRITICAL' || threatLevel === 'MEDIUM';
@@ -146,7 +148,7 @@ export default function MapComponent() {
 
         {/* Drones */}
         {dronePositions.map((drone) => (
-          <Marker key={drone.id} position={[drone.lat, drone.lng]} icon={droneIcon} />
+          <Marker key={drone.id} position={[drone.lat, drone.lng]} icon={createDroneIcon(drone.status)} />
         ))}
       </MapContainer>
     </div>

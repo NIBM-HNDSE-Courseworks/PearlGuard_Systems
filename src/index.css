@@ -347,6 +347,11 @@ body {
   transition: transform 1s linear !important;
 }
 
+/* Disable transition during docking for perfect stability */
+.drone-docked {
+  transition: none !important;
+}
+
 /* Custom dark theme for leaflet map using CSS filters */
 .dark-map-tiles {
   filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
