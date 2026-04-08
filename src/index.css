@@ -237,15 +237,17 @@ body {
 }
 
 @keyframes dronePulseAnim {
-  0% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(4); opacity: 0; }
+}
 
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
+/* Drone Propeller Animation */
+.drone-propeller {
+  animation: prop-spin 0.2s linear infinite;
+}
+
+@keyframes prop-spin {
+  to { stroke-dashoffset: -6; }
 }
 
 /* Layout */
@@ -494,17 +496,75 @@ body {
 }
 
 /* Wind Vector Animations */
-@keyframes windFlowAnim {
-  0% { transform: scale(0.8); opacity: 0.2; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-  100% { transform: scale(0.8); opacity: 0.2; }
-}
-
 .wind-vector-marker {
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  color: var(--brand-cyan);
-  filter: drop-shadow(0 0 5px var(--brand-cyan));
-  animation: windFlowAnim 2s ease-in-out infinite;
+  pointer-events: none;
 }
+
+.wind-icon-svg {
+  color: rgba(6, 182, 212, 0.6);
+  filter: drop-shadow(0 0 2px rgba(6, 182, 212, 0.4));
+}
+
+.wind-line-main {
+  stroke-width: 1.5;
+  stroke-dasharray: 6 3;
+  animation: windStreamFlow 1.5s linear infinite;
+}
+
+.wind-line-side {
+  stroke-width: 1;
+  opacity: 0.6;
+  stroke-dasharray: 4 4;
+  animation: windStreamFlow 2s linear infinite;
+}
+
+@keyframes windStreamFlow {
+  from { stroke-dashoffset: 50; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Shipping Lane Animation */
+@keyframes shippingDash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.shipping-lane-animated {
+  animation: shippingDash 1s linear infinite;
+  filter: drop-shadow(0 0 5px rgba(148, 163, 184, 0.4));
+}
+
+/* Marine Reserve Zone */
+@keyframes reservePulse {
+  0% { fill-opacity: 0.1; stroke-opacity: 0.4; }
+  50% { fill-opacity: 0.25; stroke-opacity: 0.8; }
+  100% { fill-opacity: 0.1; stroke-opacity: 0.4; }
+}
+
+.marine-reserve-zone {
+  animation: reservePulse 4s ease-in-out infinite;
+}
+
+.reserve-label {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.reserve-tag {
+  color: #10b981;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  box-shadow: none;
+  text-shadow: 1px 1px 3px rgba(2, 6, 23, 0.9), -1px -1px 3px rgba(2, 6, 23, 0.9), 1px -1px 3px rgba(2, 6, 23, 0.9), -1px 1px 3px rgba(2, 6, 23, 0.9);
+  padding-top: 50px;
+}
