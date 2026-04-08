@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon } from 'react-leaflet';
+import React, { useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { useSimulation } from '../store/useSimulation';
 
@@ -47,10 +47,37 @@ const createOriginIcon = (threatLevel) => {
   });
 };
 
+const createWindIcon = (rotation) => {
+  return L.divIcon({
+    className: 'wind-vector-marker',
+    html: `<div style="transform: rotate(${rotation}deg); font-size: 20px;">↑</div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+};
+
+// Simulated GIS Data
+const SHIPPING_LANES = [
+  [[6.85, 79.6], [7.15, 80.0]],
+  [[6.75, 79.7], [7.2, 79.95]],
+  [[6.9, 79.5], [6.95, 80.1]]
+];
+
+const MARINE_RESERVES = [
+  { center: [7.08, 79.88], radius: 2500, name: "Negombo Marine Sanctuary" },
+  { center: [6.82, 79.72], radius: 1800, name: "Panadura Reserve" }
+];
+
+// Wind Grid Generation
+const WIND_GRID = [];
+for (let lat = 6.8; lat <= 7.2; lat += 0.08) {
+  for (let lng = 79.6; lng <= 80.1; lng += 0.08) {
+    WIND_GRID.push([lat, lng]);
+  }
+}
 
 const getPolygonCoords = (center, radiusKm, windDirection, stretchFactor = 1) => {
   if (radiusKm === 0) return [];
-  // Very simplified polygon generator shifting coordinate based on wind
   const latRadian = radiusKm / 111.32;
   const lngRadian = radiusKm / (111.32 * Math.cos(center[0] * Math.PI / 180));
   
@@ -66,7 +93,6 @@ const getPolygonCoords = (center, radiusKm, windDirection, stretchFactor = 1) =>
     let shiftY = Math.sin(angle) * latRadian;
     let shiftX = Math.cos(angle) * lngRadian;
     
-    // Stretch in wind direction
     if ((windDirection === 'NW' && i > 4 && i < 12) || 
         (windDirection === 'NE' && i > 0 && i < 8)) {
         shiftX += dx * stretchFactor;
@@ -78,25 +104,111 @@ const getPolygonCoords = (center, radiusKm, windDirection, stretchFactor = 1) =>
   return coords;
 };
 
+const getWindRotation = (dir) => {
+  const mapping = { 'N': 0, 'NE': 45, 'E': 90, 'SE': 135, 'S': 180, 'SW': 225, 'W': 270, 'NW': 315 };
+  return mapping[dir] || 0;
+};
+
 export default function MapComponent() {
   const sensors = useSimulation(state => state.sensors);
   const aiPredictions = useSimulation(state => state.aiPredictions);
-  const dronesDeployed = useSimulation(state => state.dronesDeployed);
   const dronePositions = useSimulation(state => state.dronePositions);
   const windDirection = useSimulation(state => state.windDirection);
   
-  const center = [6.95, 79.82]; // Colombo coast
+  // Layer Visibility State
+  const [showWind, setShowWind] = useState(false);
+  const [showShipping, setShowShipping] = useState(false);
+  const [showReserves, setShowReserves] = useState(true); // Default active for eco-safety
 
-  // Calculate polygon based on state
-  const spreadPolygon = getPolygonCoords(aiPredictions.spreadCenter, aiPredictions.spreadRadius / 1000, windDirection, aiPredictions.threatLevel === 'CRITICAL' ? 3 : 1);
+  const center = [6.95, 79.82]; 
+
+  const spreadPolygon = getPolygonCoords(
+    aiPredictions.spreadCenter, 
+    aiPredictions.spreadRadius / 1000, 
+    windDirection, 
+    aiPredictions.threatLevel === 'CRITICAL' ? 3 : 1
+  );
+
+  const windRotation = getWindRotation(windDirection);
 
   return (
     <div className={`map-container ${aiPredictions.threatLevel === 'CRITICAL' ? 'danger-glow' : ''}`}>
+      {/* Floating GIS Layer Control */}
+      <div className="gis-control-panel glass-panel">
+        <div className="gis-control-header">GIS Layer Control</div>
+        
+        <label className="gis-toggle-item">
+          <span>Wind Vectors</span>
+          <input 
+            type="checkbox" 
+            className="gis-checkbox" 
+            checked={showWind} 
+            onChange={(e) => setShowWind(e.target.checked)} 
+          />
+        </label>
+
+        <label className="gis-toggle-item">
+          <span>Shipping Lanes</span>
+          <input 
+            type="checkbox" 
+            className="gis-checkbox" 
+            checked={showShipping} 
+            onChange={(e) => setShowShipping(e.target.checked)} 
+          />
+        </label>
+
+        <label className="gis-toggle-item">
+          <span>Marine Reserves</span>
+          <input 
+            type="checkbox" 
+            className="gis-checkbox" 
+            checked={showReserves} 
+            onChange={(e) => setShowReserves(e.target.checked)} 
+          />
+        </label>
+      </div>
+
       <MapContainer center={center} zoom={11} zoomControl={false} style={{ height: '100%', width: '100%', background: '#020617' }}>
         <TileLayer
           attribution='&copy; CARTO'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
+        
+        {/* Shipping Lanes */}
+        {showShipping && SHIPPING_LANES.map((lane, idx) => (
+          <Polyline 
+            key={`lane-${idx}`}
+            positions={lane}
+            pathOptions={{ 
+              color: '#94a3b8', 
+              weight: 2, 
+              dashArray: '10, 10', 
+              opacity: 0.6 
+            }}
+          />
+        ))}
+
+        {/* Marine Reserves */}
+        {showReserves && MARINE_RESERVES.map((reserve, idx) => (
+          <React.Fragment key={`reserve-${idx}`}>
+            <Circle 
+              center={reserve.center}
+              radius={reserve.radius}
+              pathOptions={{ 
+                color: '#10b981', 
+                fillColor: '#10b981', 
+                fillOpacity: 0.15, 
+                weight: 1 
+              }}
+            />
+            <Marker position={reserve.center} icon={L.divIcon({ className: 'reserve-label', html: `<div style="color: #10b981; font-weight: bold; font-size: 10px; white-space: nowrap;">${reserve.name}</div>`, iconSize: [100, 20], iconAnchor: [50, 0] })} />
+          </React.Fragment>
+        ))}
+
+        {/* Wind Vectors */}
+        {showWind && WIND_GRID.map((pos, idx) => (
+          <Marker key={`wind-${idx}`} position={pos} icon={createWindIcon(windRotation)} interactive={false} />
+        ))}
         
         {/* Origin Marker */}
         {aiPredictions.threatLevel !== 'LOW' && (
@@ -127,7 +239,7 @@ export default function MapComponent() {
             <Popup className="glass-panel">
               <div style={{ color: 'black', fontWeight: 'bold' }}>
                 <p>Buoy ID: {sensor.id}</p>
-                <p>Status: <span style={{ color: sensor.status === 'SAFE' ? 'green' : 'red' }}>{sensor.status}</span></p>
+                <p>Status: <span style={{ color: sensor.status === 'SAFE' ? 'green' : (sensor.status === 'DANGER' ? 'red' : 'orange') }}>{sensor.status}</span></p>
                 <p>Toxicity: {sensor.toxicityPpm.toFixed(1)} ppm</p>
               </div>
             </Popup>

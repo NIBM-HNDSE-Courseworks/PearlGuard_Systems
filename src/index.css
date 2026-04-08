@@ -421,3 +421,90 @@ body {
   min-height: 200px;
   /* Ensure widgets have some space */
 }
+
+/* GIS Control Overlay */
+.gis-control-panel {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 16px;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gis-control-header {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--brand-cyan);
+  border-bottom: 1px solid var(--border-glass);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.gis-toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.gis-toggle-item span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.gis-checkbox {
+  appearance: none;
+  width: 32px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-glass);
+}
+
+.gis-checkbox:checked {
+  background: var(--brand-cyan);
+}
+
+.gis-checkbox::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: all 0.3s ease;
+}
+
+.gis-checkbox:checked::before {
+  left: 16px;
+}
+
+/* Wind Vector Animations */
+@keyframes windFlowAnim {
+  0% { transform: scale(0.8); opacity: 0.2; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(0.8); opacity: 0.2; }
+}
+
+.wind-vector-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-cyan);
+  filter: drop-shadow(0 0 5px var(--brand-cyan));
+  animation: windFlowAnim 2s ease-in-out infinite;
+}
