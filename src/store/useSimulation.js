@@ -52,6 +52,13 @@ export const useSimulation = create((set, get) => ({
     { id: 'd5', name: 'Drone 5', lat: 6.93, lng: 79.84, baseLat: 6.93, baseLng: 79.84, battery: 100, status: 'IDLE', targetBuoy: null }
   ],
 
+  // Shipping Traffic
+  ships: [
+    { id: 'SHIP-01', lat: 6.75, lng: 79.81, status: 'NORMAL', targetWaypoint: null },
+    { id: 'SHIP-02', lat: 6.95, lng: 79.78, status: 'NORMAL', targetWaypoint: null },
+    { id: 'SHIP-03', lat: 7.15, lng: 79.76, status: 'NORMAL', targetWaypoint: null },
+  ],
+
   sensorHistory: {},
 
   // Actions
@@ -87,6 +94,21 @@ export const useSimulation = create((set, get) => ({
     get().addLog('EMERGENCY_ACTION', 'Autonomous neutralizing drones deployed to hazard zone.');
   },
 
+  rerouteTraffic: () => {
+    set((state) => {
+      // Divert to a secondary safe lane waypoint (further offshore west)
+      // We will push each ship's longitude westward horizontally so they move in parallel
+      return {
+        ships: state.ships.map(ship => ({
+          ...ship,
+          status: 'REROUTING',
+          targetWaypoint: [ship.lat, ship.lng - 0.20] // maintain lat, move deeper west
+        }))
+      };
+    });
+    get().addLog('TRAFFIC_REROUTING', 'Shipping traffic diverted to secondary safe lane.');
+  },
+
   addLog: (type, details) => {
     set((state) => ({
       blockchainLog: [
@@ -103,7 +125,7 @@ export const useSimulation = create((set, get) => ({
 
   // Game Engine Tick
   tick: () => set((state) => {
-    const { scenario, dronesDeployed, sensors, aiPredictions, dronePositions, sensorHistory } = state;
+    const { scenario, dronesDeployed, sensors, aiPredictions, dronePositions, sensorHistory, ships } = state;
 
     // Simulate Data Progression based on Scenario
     let newSensors = { ...sensors };
@@ -221,6 +243,28 @@ export const useSimulation = create((set, get) => ({
         }
       }
     }
+
+    // Shipping Traffic Movement
+    let newShips = [...ships].map(ship => {
+      let updatedShip = { ...ship };
+      if (updatedShip.status === 'REROUTING' && updatedShip.targetWaypoint) {
+        const dx = updatedShip.targetWaypoint[1] - updatedShip.lng;
+        const dy = updatedShip.targetWaypoint[0] - updatedShip.lat;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 0.01) {
+          const speed = 0.015; // Smooth incremental movement
+          const moveStep = Math.min(speed, distance);
+          updatedShip.lng += (dx / distance) * moveStep;
+          updatedShip.lat += (dy / distance) * moveStep;
+        } else {
+          // Ship has reached its destination safe zone
+          updatedShip.status = 'SAFE';
+          updatedShip.targetWaypoint = null;
+        }
+      }
+      return updatedShip;
+    });
 
     // Swarm Logic: Simulate drone actions if deployed
     if (dronesDeployed) {
@@ -387,7 +431,8 @@ export const useSimulation = create((set, get) => ({
       dronePositions: newDronePositions,
       dronesDeployed: finalDronesDeployed,
       scenario: finalScenario,
-      sensorHistory: newSensorHistory
+      sensorHistory: newSensorHistory,
+      ships: newShips
     };
   })
 }));

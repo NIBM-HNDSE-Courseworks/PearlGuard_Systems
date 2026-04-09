@@ -94,6 +94,27 @@ const createOriginIcon = (threatLevel) => {
   });
 };
 
+const createShipIcon = (status) => {
+  const color = status === 'NORMAL' ? '#60a5fa' : (status === 'REROUTING' ? '#f59e0b' : '#10b981');
+  const glowClass = status === 'REROUTING' ? 'emergency-glow' : '';
+  
+  return L.divIcon({
+    className: `custom-ship-icon ${glowClass}`,
+    html: `
+      <div style="color: ${color}; filter: drop-shadow(0px 0px 4px ${color}); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 16L4 10H20L22 16V20H2V16Z" fill="currentColor" fill-opacity="0.2"/>
+          <rect x="7" y="6" width="10" height="4"/>
+          <rect x="9" y="3" width="6" height="3"/>
+          <path d="M2 16H22"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
+  });
+};
+
 const createWindIcon = (rotation) => {
   return L.divIcon({
     className: 'wind-vector-marker',
@@ -114,9 +135,9 @@ const createWindIcon = (rotation) => {
 
 // Simulated GIS Data
 const SHIPPING_LANES = [
-  [[6.85, 79.6], [7.15, 80.0]],
-  [[6.75, 79.7], [7.2, 79.95]],
-  [[6.9, 79.5], [6.95, 80.1]]
+  [[6.65, 79.82], [7.20, 79.75]], // Inner Lane (Danger Zone)
+  [[6.65, 79.65], [7.20, 79.55]], // Middle Lane (Safe Diversion Route 1)
+  [[6.65, 79.45], [7.20, 79.35]]  // Far Outer Lane
 ];
 
 const MARINE_RESERVES = [
@@ -170,6 +191,7 @@ export default function MapComponent() {
   const aiPredictions = useSimulation(state => state.aiPredictions);
   const dronePositions = useSimulation(state => state.dronePositions);
   const windDirection = useSimulation(state => state.windDirection);
+  const ships = useSimulation(state => state.ships);
   
   // Layer Visibility State
   const [showWind, setShowWind] = useState(false);
@@ -333,6 +355,24 @@ export default function MapComponent() {
             }} 
           />
         )}
+
+        {/* Shipping Traffic */}
+        {ships && ships.map(ship => (
+          <Marker 
+            key={ship.id} 
+            position={[ship.lat, ship.lng]}
+            icon={createShipIcon(ship.status)}
+          >
+            <Popup className="glass-panel">
+              <div style={{ color: 'black', fontWeight: 'bold' }}>
+                <p>Vessel ID: {ship.id}</p>
+                <p>Status: <span style={{ color: ship.status === 'NORMAL' ? '#3b82f6' : (ship.status === 'REROUTING' ? '#f59e0b' : '#10b981') }}>{ship.status}</span></p>
+                {ship.status === 'REROUTING' && <p>Route Diverted ⚠️</p>}
+                {ship.status === 'SAFE' && <p>Secured in Safe Zone ✅</p>}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
 
         {/* Drones */}
         {dronePositions.map((drone) => (

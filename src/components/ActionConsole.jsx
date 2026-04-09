@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
 import { useSimulation } from '../store/useSimulation';
-import { Play, AlertTriangle, ShieldAlert, Crosshair } from 'lucide-react';
+import { Play, AlertTriangle, ShieldAlert, Crosshair, Route } from 'lucide-react';
 
 export default function ActionConsole() {
-  const { scenario, setScenario, dronesDeployed, deployDrones, tick } = useSimulation();
+  const { scenario, setScenario, dronesDeployed, deployDrones, tick, rerouteTraffic, ships } = useSimulation();
+  
+  const isRerouting = ships && ships.some(s => s.status === 'REROUTING');
+  const allSafe = ships && ships.every(s => s.status === 'SAFE');
 
   // Engine loop
   useEffect(() => {
@@ -73,6 +76,22 @@ export default function ActionConsole() {
         >
           <Crosshair size={16} />
           {dronesDeployed ? 'DRONES ACTIVE' : 'DEPLOY CLEANUP DRONES'}
+        </button>
+
+        <button 
+          className={`glass-button ${isRerouting ? 'active' : ''}`}
+          onClick={rerouteTraffic}
+          disabled={isRerouting || allSafe}
+          style={{ 
+            marginTop: '4px',
+            borderColor: isRerouting ? 'var(--status-warn)' : undefined, 
+            color: isRerouting ? 'var(--status-warn)' : (allSafe ? '#10b981' : undefined),
+            justifyContent: 'center',
+            opacity: (isRerouting || allSafe) ? 0.7 : 1
+          }}
+        >
+          <Route size={16} /> 
+          {isRerouting ? 'DIVERTING TRAFFIC...' : (allSafe ? 'TRAFFIC SECURED' : 'REROUTE SHIPPING TRAFFIC')}
         </button>
       </div>
     </div>
